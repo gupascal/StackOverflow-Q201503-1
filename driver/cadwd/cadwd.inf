@@ -1,0 +1,91 @@
+;
+; cadwd.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Sample ; TODO: edit Class
+ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=cadwd.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+cadwd.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%cadwd.DeviceDesc%=cadwd_Device, Root\cadwd ; TODO: edit hw-id
+
+[cadwd_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+cadwd.sys
+
+;-------------- Service installation
+[cadwd_Device.NT.Services]
+AddService = cadwd,%SPSVCINST_ASSOCSERVICE%, cadwd_Service_Inst
+
+; -------------- cadwd driver install sections
+[cadwd_Service_Inst]
+DisplayName    = %cadwd.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\cadwd.sys
+LoadOrderGroup = Extended Base
+
+;
+;--- cadwd_Device Coinstaller installation ------
+;
+
+[DestinationDirs]
+cadwd_Device_CoInstaller_CopyFiles = 11
+
+[cadwd_Device.NT.CoInstallers]
+AddReg=cadwd_Device_CoInstaller_AddReg
+CopyFiles=cadwd_Device_CoInstaller_CopyFiles
+
+[cadwd_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[cadwd_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[SourceDisksFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+[cadwd_Device.NT.Wdf]
+KmdfService =  cadwd, cadwd_wdfsect
+[cadwd_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="" ; TODO: add ManufacturerName
+ClassName="Samples" ; TODO: edit ClassName
+DiskName = "cadwd Installation Disk"
+cadwd.DeviceDesc = "cadwd Device"
+cadwd.SVCDESC = "cadwd Service"

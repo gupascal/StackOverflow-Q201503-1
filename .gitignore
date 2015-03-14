@@ -1,0 +1,11 @@
+# General files
+*.exe
+*.dll
+
+# Specifics files
+## Windows / Visual Studio
+Win*Debug
+Win*Release
+*.sdf
+*.opensdf
+*.v*.suo
