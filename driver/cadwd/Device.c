@@ -76,10 +76,11 @@ Return Value:
         // Create a device interface so that applications can find and talk
         // to us.
         //
+        DECLARE_CONST_UNICODE_STRING(symbolicLinkName, L"\\DosDevices\\cadwd");
         status = WdfDeviceCreateDeviceInterface(
             device,
             &GUID_DEVINTERFACE_cadwd,
-            NULL // ReferenceString
+            &symbolicLinkName //NULL // ReferenceString
             );
 
         if (NT_SUCCESS(status)) {

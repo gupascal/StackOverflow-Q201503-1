@@ -4,23 +4,26 @@
 
 [Version]
 Signature="$WINDOWS NT$"
-Class=Sample ; TODO: edit Class
-ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+;;; Class=Sample ; TODO: edit Class
+;;; ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Class       = "ActivityMonitor"
+ClassGuid   = {b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}
 Provider=%ManufacturerName%
 CatalogFile=cadwd.cat
 DriverVer= ; TODO: set DriverVer in stampinf property pages
 
 [DestinationDirs]
 DefaultDestDir = 12
+Drivers_Dir = 12 ;;;
 
 ; ================= Class section =====================
 
-[ClassInstall32]
-Addreg=SampleClassReg
+;;;[ClassInstall32]
+;;;Addreg=SampleClassReg
 
-[SampleClassReg]
-HKR,,,0,%ClassName%
-HKR,,Icon,,-5
+;;;[SampleClassReg]
+;;;HKR,,,0,%ClassName%
+;;;HKR,,Icon,,-5
 
 [SourceDisksNames]
 1 = %DiskName%,,,""
@@ -32,30 +35,55 @@ cadwd.sys  = 1,,
 ; Install Section
 ;*****************************************
 
-[Manufacturer]
-%ManufacturerName%=Standard,NT$ARCH$
+;;;[Manufacturer]
+;;;%ManufacturerName%=Standard,NT$ARCH$
 
-[Standard.NT$ARCH$]
-%cadwd.DeviceDesc%=cadwd_Device, Root\cadwd ; TODO: edit hw-id
+;;;[Standard.NT$ARCH$]
+;;;%cadwd.DeviceDesc%=cadwd_Device, Root\cadwd ; TODO: edit hw-id
 
-[cadwd_Device.NT]
+;;;[cadwd_Device.NT]
+[DefaultInstall] ;;;
+OptionDesc = %cadwd.SVCDESC%
 CopyFiles=Drivers_Dir
 
 [Drivers_Dir]
 cadwd.sys
 
+;;
+;; Default uninstall sections
+;;
+
+[DefaultUninstall]
+DelFiles   = Drivers_Dir
+
+[DefaultUninstall.Services]
+DelService = %ServiceName%,0x200      ;Ensure service is stopped before deleting
+
+
 ;-------------- Service installation
-[cadwd_Device.NT.Services]
-AddService = cadwd,%SPSVCINST_ASSOCSERVICE%, cadwd_Service_Inst
+;;;[cadwd_Device.NT.Services]
+[DefaultInstall.Services] ;;;
+;AddService = %ServiceName%,%SPSVCINST_ASSOCSERVICE%, cadwd_Service_Inst
+;AddService = %ServiceName%,%SPSVCSINST_STARTSERVICE%, cadwd_Service_Inst
+AddService = %ServiceName%,, cadwd_Service_Inst
 
 ; -------------- cadwd driver install sections
 [cadwd_Service_Inst]
-DisplayName    = %cadwd.SVCDESC%
+DisplayName    = %ServiceName%
 ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
-StartType      = 3               ; SERVICE_DEMAND_START
+StartType      = 3               ;;; 3 ; SERVICE_AUTO_START  ;;; 3 ; SERVICE_DEMAND_START
 ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %12%\cadwd.sys
-LoadOrderGroup = Extended Base
+;;;LoadOrderGroup = Extended Base
+LoadOrderGroup = "FSFilter Activity Monitor"
+AddReg           = cadwd.AddRegistry
+
+[cadwd.AddRegistry]
+HKR,,"DebugFlags",0x00010001 ,0x0
+HKR,,"SupportedFeatures",0x00010001,0x3
+HKR,"Instances","DefaultInstance",0x00000000,%Instance1.Name%
+HKR,"Instances\"%Instance1.Name%,"Altitude",0x00000000,%Instance1.Altitude%
+HKR,"Instances\"%Instance1.Name%,"Flags",0x00010001,%Instance1.Flags%
 
 ;
 ;--- cadwd_Device Coinstaller installation ------
@@ -64,7 +92,8 @@ LoadOrderGroup = Extended Base
 [DestinationDirs]
 cadwd_Device_CoInstaller_CopyFiles = 11
 
-[cadwd_Device.NT.CoInstallers]
+;;;[cadwd_Device.NT.CoInstallers]
+[DDInstall.CoInstallers]
 AddReg=cadwd_Device_CoInstaller_AddReg
 CopyFiles=cadwd_Device_CoInstaller_CopyFiles
 
@@ -77,15 +106,24 @@ WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
 [SourceDisksFiles]
 WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
 
-[cadwd_Device.NT.Wdf]
+;;; [cadwd_Device.NT.Wdf]
+[DDInstall.Wdf]
 KmdfService =  cadwd, cadwd_wdfsect
 [cadwd_wdfsect]
 KmdfLibraryVersion = $KMDFVERSION$
 
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002
-ManufacturerName="" ; TODO: add ManufacturerName
-ClassName="Samples" ; TODO: edit ClassName
+SPSVCSINST_STARTSERVICE = 0x00000800
+ManufacturerName="CAD Org" ; TODO: add ManufacturerName
+;;;ClassName="Samples" ; TODO: edit ClassName
 DiskName = "cadwd Installation Disk"
 cadwd.DeviceDesc = "cadwd Device"
 cadwd.SVCDESC = "cadwd Service"
+ServiceName = "cadwd Service"
+
+;Instances specific information.
+Instance1.Name          = "cadwd Instance"
+Instance1.Altitude      = "370030"
+Instance1.Flags         = 0x1          ; Suppress automatic attachments
+                          ; 0x0          ; allow automatic attachments
